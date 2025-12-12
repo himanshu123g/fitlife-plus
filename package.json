@@ -15,10 +15,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "build": "react-scripts build",
     "dev": "react-scripts start"
   },
-
-  "runInstructions": "If PowerShell blocks npm, open Command Prompt and run: cd /d \"D:\\Fit Life Project\\frontend\" && npm install && npm start. Or in PowerShell run: Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force then retry.",
   "browserslist": {
     "production": [
       ">0.2%",

@@ -9,8 +9,8 @@ const getBaseURL = () => {
   
   // For production deployment (Vercel, Netlify, etc.)
   if (process.env.NODE_ENV === 'production') {
-    // Temporarily use a placeholder to avoid API errors during frontend testing
-    return 'https://jsonplaceholder.typicode.com';
+    // Replace with your actual backend URL once deployed
+    return 'https://fitlife-backend-latest.onrender.com/api';
   }
   
   // If accessing from network (e.g., 192.168.x.x), use the same host for API

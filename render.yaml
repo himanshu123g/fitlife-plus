@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: fitlife-backend
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        value: mongodb+srv://fitlife_user:mFzSW2IMFvBdI7Hi@fitlifecluster.yoznqn9.mongodb.net/?retryWrites=true&w=majority
+      - key: JWT_SECRET
+        value: fitlife_jwt_secret_key_2024_secure_random_string_please_change_this
+      - key: RAZORPAY_KEY_ID
+        value: rzp_test_RbG4vPywUm6x4a
+      - key: RAZORPAY_KEY_SECRET
+        value: cgLF2uaRJph5KYSQb1J2unrV
+      - key: FRONTEND_URL
+        value: https://your-vercel-app.vercel.app
