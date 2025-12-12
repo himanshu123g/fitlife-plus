@@ -60,6 +60,39 @@ export default function Shop() {
       setProducts(res.data.products);
     } catch (err) {
       console.error('Error loading products:', err);
+      // Use mock data when backend is not available
+      setProducts([
+        {
+          _id: '1',
+          name: 'Whey Protein Powder',
+          brand: 'FitLife',
+          category: 'Protein',
+          price: 2999,
+          image: '/images/whey-protein.jpg',
+          description: 'High-quality whey protein for muscle building',
+          stock: 50
+        },
+        {
+          _id: '2',
+          name: 'Creatine Monohydrate',
+          brand: 'FitLife',
+          category: 'Performance',
+          price: 1499,
+          image: '/images/creatine.jpg',
+          description: 'Pure creatine for enhanced performance',
+          stock: 30
+        },
+        {
+          _id: '3',
+          name: 'BCAA Capsules',
+          brand: 'FitLife',
+          category: 'Recovery',
+          price: 1999,
+          image: '/images/bcaa.jpg',
+          description: 'Essential amino acids for recovery',
+          stock: 25
+        }
+      ]);
     } finally {
       setLoading(false);
     }
