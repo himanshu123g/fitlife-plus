@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "FitLife+ - Complete Fitness Platform",
   "scripts": {
-    "build": "echo 'Build handled by Vercel'",
+    "build": "cd frontend && npm install && npm run build",
     "start": "node api/index.js"
   },
   "keywords": ["fitness", "health", "react", "nodejs"],
