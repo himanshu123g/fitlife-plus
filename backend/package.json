@@ -5,6 +5,7 @@
   "scripts": {
     "build": "echo 'No build step required for Node.js backend'",
     "start": "node server.js",
+    "start-render": "node render-start.js",
     "dev": "nodemon server.js",
     "create-admin": "node scripts/createAdmin.js",
     "seed-products": "node scripts/seedProducts.js",
