@@ -12,24 +12,40 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Simple health check first
+// Connect to MongoDB
+let isConnected = false;
+
+const connectDB = async () => {
+  if (isConnected) return;
+  
+  if (!process.env.MONGODB_URI) {
+    console.error('MONGODB_URI not found in environment variables');
+    return;
+  }
+
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    isConnected = true;
+    console.log('MongoDB connected successfully');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+  }
+};
+
+// Health check endpoint
 app.get('/api', (req, res) => {
   res.json({ 
     status: 'ok', 
     message: 'FitLife+ API running on Vercel',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    mongodb: isConnected ? 'connected' : 'disconnected'
   });
 });
 
-// Connect to MongoDB only if URI is provided
-if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  }).catch(err => console.error('MongoDB connection error:', err));
-}
-
-// Routes (load only after basic setup works)
+// Load routes
 try {
   const authRoutes = require('../backend/routes/auth');
   const bmiRoutes = require('../backend/routes/bmi');
@@ -46,6 +62,12 @@ try {
   const passwordResetRoutes = require('../backend/routes/passwordReset');
   const reviewsRoutes = require('../backend/routes/reviews');
   const videoSessionsRoutes = require('../backend/routes/videoSessions');
+
+  // Connect to DB before setting up routes
+  app.use(async (req, res, next) => {
+    await connectDB();
+    next();
+  });
 
   app.use('/api/auth', authRoutes);
   app.use('/api/bmi', bmiRoutes);
@@ -64,6 +86,23 @@ try {
   app.use('/api/video-sessions', videoSessionsRoutes);
 } catch (error) {
   console.error('Error loading routes:', error);
+  
+  // Fallback route for when routes fail to load
+  app.use('/api/*', (req, res) => {
+    res.status(500).json({ 
+      error: 'API routes failed to load', 
+      message: error.message 
+    });
+  });
 }
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('API Error:', err);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: err.message 
+  });
+});
 
 module.exports = app;
