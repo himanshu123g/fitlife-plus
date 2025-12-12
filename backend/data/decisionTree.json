@@ -1,0 +1,36 @@
+{
+  "id": "start",
+  "question": "Welcome to FitBot! What's your primary fitness goal?",
+  "options": [
+    { "label": "Weight Loss", "next": "goal_weight_loss" },
+    { "label": "Weight Gain", "next": "goal_weight_gain" },
+    { "label": "Muscle Gain", "next": "goal_muscle" },
+    { "label": "Maintenance", "next": "goal_maintain" }
+  ],
+  "nodes": {
+    "goal_weight_loss": {
+      "question": "Preferred workout type?",
+      "options": [
+        { "label": "Cardio", "advice": "Focus on 30-45 min cardio + calorie deficit. Include protein-rich meals." },
+        { "label": "Strength + Cardio", "advice": "Mix strength 3x/week with HIIT. Reduce refined carbs." }
+      ]
+    },
+    "goal_weight_gain": {
+      "question": "Do you want clean bulk or fast gain?",
+      "options": [
+        { "label": "Clean bulk", "advice": "Calorie surplus of 300-500 kcal, protein 1.6-2g/kg, strength training." },
+        { "label": "Fast gain", "advice": "Higher calorie surplus, nutrient-dense meals and progressive overload." }
+      ]
+    },
+    "goal_muscle": {
+      "question": "Experience level?",
+      "options": [
+        { "label": "Beginner", "advice": "Full-body strength 3x/week, protein 1.6g/kg, compound lifts." },
+        { "label": "Intermediate/Advanced", "advice": "Split routines, progressive overload, adequate recovery." }
+      ]
+    },
+    "goal_maintain": {
+      "advice": "Maintain calorie balance, mix cardio and strength, track weekly weight and adjust."
+    }
+  }
+}

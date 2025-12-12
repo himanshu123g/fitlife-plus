@@ -1,0 +1,14 @@
+{
+  "name": "fitlife-fullstack",
+  "version": "1.0.0",
+  "description": "FitLife+ - Complete Fitness Platform",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "start": "node backend/server.js",
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix frontend\"",
+    "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "keywords": ["fitness", "health", "react", "nodejs"],
+  "author": "Himanshu Sodhi",
+  "license": "MIT"
+}
