@@ -213,8 +213,7 @@ body {
     margin-top: 0;
   }
 }
-/* Fea
-tures Page Custom Styles */
+/* Features Page Custom Styles */
 .btn-feature {
   @apply inline-block px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg;
 }
