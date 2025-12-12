@@ -3,10 +3,8 @@
   "version": "1.0.0",
   "description": "FitLife+ - Complete Fitness Platform",
   "scripts": {
-    "build": "cd frontend && npm ci && npm run build",
-    "start": "node api/index.js",
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix frontend\"",
-    "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+    "build": "echo 'Build handled by Vercel'",
+    "start": "node api/index.js"
   },
   "keywords": ["fitness", "health", "react", "nodejs"],
   "author": "Himanshu Sodhi",
