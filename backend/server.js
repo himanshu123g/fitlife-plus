@@ -14,7 +14,7 @@ app.use(cors({
 app.use(bodyParser.json({ limit: '50mb' })); // Increased limit for image uploads
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-// Routes
+// Routes - Fixed paths (removed ./backend/ prefix)
 const authRoutes = require('./routes/auth');
 const bmiRoutes = require('./routes/bmi');
 const membershipRoutes = require('./routes/membership');
@@ -54,102 +54,6 @@ app.get('/', (req, res) => {
 
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', time: new Date().toISOString() });
-});
-
-// Added: setup helper endpoints to fetch step instructions
-app.get('/setup/step1', (req, res) => {
-  res.json({
-    step: 1,
-    title: 'Backend initial setup',
-    tasks: [
-      'Open terminal and cd "d:\\Fit Life Project\\backend"',
-      'Create .env from .env.example and fill MONGODB_URI, JWT_SECRET, RAZORPAY keys, FRONTEND_URL',
-      'Run: npm install',
-      'Start server: npm run dev',
-      'Verify: open http://localhost:5000/health'
-    ],
-    note: 'Reply "done" when complete to receive Step 2'
-  });
-});
-
-app.get('/setup/step2', (req, res) => {
-  res.json({
-    step: 2,
-    title: 'Frontend setup & basic test',
-    tasks: [
-      'Open terminal and cd "d:\\Fit Life Project\\frontend"',
-      'Create .env from .env.example and set REACT_APP_API_URL=http://localhost:5000/api',
-      'Run: npm install',
-      'Start frontend: npm start',
-      'Open http://localhost:3000 and signup/login to test flows'
-    ],
-    note: 'Perform Step 1 first. Reply "ready for step 2" when you want live guidance.'
-  });
-});
-
-// Added: detailed install instructions endpoint (Windows-focused)
-app.get('/setup/install', (req, res) => {
-  res.json({
-    title: 'Install prerequisites (Windows)',
-    steps: [
-      {
-        name: 'Node.js (LTS)',
-        url: 'https://nodejs.org/en/download/',
-        notes: [
-          'Download "Windows Installer (.msi)" LTS and run it (accept defaults).',
-          'Verify: open PowerShell and run "node -v" and "npm -v".'
-        ]
-      },
-      {
-        name: 'Git',
-        url: 'https://git-scm.com/download/win',
-        notes: ['Run installer (accept defaults).', 'Verify: "git --version"']
-      },
-      {
-        name: 'VS Code (optional)',
-        url: 'https://code.visualstudio.com/',
-        notes: ['Install and open project folder for editing.']
-      },
-      {
-        name: 'MongoDB Atlas (cloud DB)',
-        url: 'https://www.mongodb.com/cloud/atlas',
-        notes: ['Create free cluster, get connection string, and whitelist IP.']
-      },
-      {
-        name: 'Razorpay Sandbox',
-        url: 'https://razorpay.com/',
-        notes: ['Create sandbox account to obtain test key_id and key_secret.']
-      }
-    ],
-    verifyCommands: [
-      'node -v',
-      'npm -v',
-      'git --version'
-    ],
-    note: 'After installing Node.js & Git, reply "done" (or paste the output of node -v) to receive the next step.'
-  });
-});
-
-app.get('/setup/powershell', (req, res) => {
-  res.json({
-    issue: "PowerShell '&&' not recognized",
-    explanation: "Windows PowerShell (5.1) does not support the '&&' operator. Use semicolon or run separate commands, or use CMD.",
-    examples: {
-      powershell_two_lines: [
-        'Set-Location "D:\\Fit Life Project\\backend"',
-        'Copy-Item .env.example .env'
-      ],
-      powershell_one_line: 'cd "D:\\Fit Life Project\\backend"; Copy-Item .env.example .env',
-      cmd: 'cd /d "D:\\Fit Life Project\\backend" && copy .env.example .env',
-      cmd_from_powershell: 'cmd /c "cd /d \\"D:\\Fit Life Project\\backend\\" && copy .env.example .env"'
-    },
-    next_steps: [
-      "Edit d:\\Fit Life Project\\backend\\.env and fill MONGODB_URI, JWT_SECRET, RAZORPAY keys, FRONTEND_URL",
-      "Run: npm install",
-      "Run: npm run dev",
-      "Verify: open http://localhost:5000/health"
-    ]
-  });
 });
 
 // Error handler
