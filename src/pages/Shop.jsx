@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import API from '../api';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import BuyNowModal from '../components/BuyNowModal';
-import { calculateDiscountedPrice, getDiscountLabel, getMembershipUpgradeMessage } from '../utils/discountHelper';
+import { calculateDiscountedPrice, getDiscountLabel } from '../utils/discountHelper';
 
 export default function Shop() {
   const [products, setProducts] = useState([]);
@@ -68,8 +68,9 @@ export default function Shop() {
           brand: 'FitLife',
           category: 'Protein',
           price: 2999,
-          image: '/images/whey-protein.jpg',
-          description: 'High-quality whey protein for muscle building',
+          imageUrl: 'https://via.placeholder.com/300x300/f3f4f6/6b7280?text=Whey+Protein',
+          description: 'High-quality whey protein for muscle building and recovery',
+          features: ['25g protein per serving', 'Fast absorption', 'Muscle building support'],
           stock: 50
         },
         {
@@ -78,8 +79,9 @@ export default function Shop() {
           brand: 'FitLife',
           category: 'Performance',
           price: 1499,
-          image: '/images/creatine.jpg',
-          description: 'Pure creatine for enhanced performance',
+          imageUrl: 'https://via.placeholder.com/300x300/f3f4f6/6b7280?text=Creatine',
+          description: 'Pure creatine monohydrate for enhanced performance and strength',
+          features: ['Increases power output', 'Improves strength', '100% pure creatine'],
           stock: 30
         },
         {
@@ -88,9 +90,32 @@ export default function Shop() {
           brand: 'FitLife',
           category: 'Recovery',
           price: 1999,
-          image: '/images/bcaa.jpg',
-          description: 'Essential amino acids for recovery',
+          imageUrl: 'https://via.placeholder.com/300x300/f3f4f6/6b7280?text=BCAA',
+          description: 'Essential branched-chain amino acids for faster recovery',
+          features: ['Reduces muscle fatigue', 'Faster recovery', 'Essential amino acids'],
           stock: 25
+        },
+        {
+          _id: '4',
+          name: 'Pre-Workout Energy',
+          brand: 'FitLife',
+          category: 'Energy',
+          price: 1799,
+          imageUrl: 'https://via.placeholder.com/300x300/f3f4f6/6b7280?text=Pre-Workout',
+          description: 'High-energy pre-workout formula for intense training sessions',
+          features: ['Boosts energy levels', 'Enhances focus', 'Improves endurance'],
+          stock: 40
+        },
+        {
+          _id: '5',
+          name: 'Multivitamin Complex',
+          brand: 'FitLife',
+          category: 'Health',
+          price: 1299,
+          imageUrl: 'https://via.placeholder.com/300x300/f3f4f6/6b7280?text=Multivitamin',
+          description: 'Complete multivitamin and mineral complex for overall health',
+          features: ['24 essential vitamins', 'Immune support', 'Daily nutrition'],
+          stock: 60
         }
       ]);
     } finally {
