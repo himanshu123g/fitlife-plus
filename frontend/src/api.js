@@ -9,8 +9,8 @@ const getBaseURL = () => {
   
   // For production deployment (Vercel, Netlify, etc.)
   if (process.env.NODE_ENV === 'production') {
-    // Use the same domain for API calls in production
-    return `${window.location.origin}/api`;
+    // Temporarily use a placeholder to avoid API errors during frontend testing
+    return 'https://jsonplaceholder.typicode.com';
   }
   
   // If accessing from network (e.g., 192.168.x.x), use the same host for API
