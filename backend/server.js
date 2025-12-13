@@ -98,11 +98,12 @@ const connectMongoDB = async () => {
   try {
     // Alternative connection strings for Railway compatibility
     const mongoURIs = [
+      // Original SRV connection
       process.env.MONGODB_URI,
-      // Fallback with direct connection (no SRV)
-      'mongodb://fitlife_user:mFzSW2IMFvBdI7Hi@ac-nkxaaaa-shard-00-00.yoznqn9.mongodb.net:27017,ac-nkxaaaa-shard-00-01.yoznqn9.mongodb.net:27017,ac-nkxaaaa-shard-00-02.yoznqn9.mongodb.net:27017/fitlife?ssl=true&replicaSet=atlas-abc123-shard-0&authSource=admin&retryWrites=true&w=majority',
-      // Another fallback format
-      process.env.MONGODB_URI?.replace('mongodb+srv://', 'mongodb://').replace('/?', '/fitlife?ssl=true&authSource=admin&')
+      // Alternative with explicit database name
+      process.env.MONGODB_URI?.replace('/?', '/fitlife?'),
+      // Simplified SRV connection
+      'mongodb+srv://fitlife_user:mFzSW2IMFvBdI7Hi@fitlifecluster.yoznqn9.mongodb.net/fitlife?retryWrites=true&w=majority&ssl=true'
     ].filter(Boolean);
 
     const mongoOptions = {
@@ -112,11 +113,8 @@ const connectMongoDB = async () => {
       socketTimeoutMS: 45000, // 45 seconds
       connectTimeoutMS: 15000, // 15 seconds
       family: 4, // Use IPv4, skip trying IPv6
-      retryWrites: true,
-      w: 'majority',
       maxPoolSize: 10,
-      bufferCommands: false,
-      bufferMaxEntries: 0
+      bufferCommands: false
     };
 
     console.log('🔄 Attempting MongoDB connection with multiple strategies...');
