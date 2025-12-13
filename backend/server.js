@@ -93,25 +93,56 @@ mongoose.connection.on('disconnected', () => {
   console.warn('MongoDB disconnected');
 });
 
-// Enhanced MongoDB connection with better error handling
+// Enhanced MongoDB connection with Railway-specific fixes
 const connectMongoDB = async () => {
   try {
+    // Alternative connection strings for Railway compatibility
+    const mongoURIs = [
+      process.env.MONGODB_URI,
+      // Fallback with direct connection (no SRV)
+      'mongodb://fitlife_user:mFzSW2IMFvBdI7Hi@ac-nkxaaaa-shard-00-00.yoznqn9.mongodb.net:27017,ac-nkxaaaa-shard-00-01.yoznqn9.mongodb.net:27017,ac-nkxaaaa-shard-00-02.yoznqn9.mongodb.net:27017/fitlife?ssl=true&replicaSet=atlas-abc123-shard-0&authSource=admin&retryWrites=true&w=majority',
+      // Another fallback format
+      process.env.MONGODB_URI?.replace('mongodb+srv://', 'mongodb://').replace('/?', '/fitlife?ssl=true&authSource=admin&')
+    ].filter(Boolean);
+
     const mongoOptions = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 10000, // 10 seconds
+      serverSelectionTimeoutMS: 15000, // 15 seconds
       socketTimeoutMS: 45000, // 45 seconds
+      connectTimeoutMS: 15000, // 15 seconds
       family: 4, // Use IPv4, skip trying IPv6
       retryWrites: true,
-      w: 'majority'
+      w: 'majority',
+      maxPoolSize: 10,
+      bufferCommands: false,
+      bufferMaxEntries: 0
     };
 
-    console.log('Connecting to MongoDB with enhanced options...');
-    await mongoose.connect(process.env.MONGODB_URI, mongoOptions);
-    console.log('✅ MongoDB connected successfully');
+    console.log('🔄 Attempting MongoDB connection with multiple strategies...');
+    
+    for (let i = 0; i < mongoURIs.length; i++) {
+      try {
+        console.log(`📡 Trying connection method ${i + 1}...`);
+        await mongoose.connect(mongoURIs[i], mongoOptions);
+        console.log('✅ MongoDB connected successfully!');
+        console.log(`🎯 Connected using method ${i + 1}`);
+        return; // Success, exit the function
+      } catch (error) {
+        console.log(`❌ Method ${i + 1} failed:`, error.message);
+        if (i < mongoURIs.length - 1) {
+          console.log('🔄 Trying next connection method...');
+        }
+      }
+    }
+    
+    // If all methods fail
+    throw new Error('All MongoDB connection methods failed');
+    
   } catch (error) {
-    console.error('❌ MongoDB connection failed:', error.message);
-    console.log('⚠️  Server will continue without MongoDB (some features may not work)');
+    console.error('❌ MongoDB connection completely failed:', error.message);
+    console.log('⚠️  Server will continue without MongoDB');
+    console.log('🚨 Database features (login, signup, data storage) will not work!');
   }
 };
 
