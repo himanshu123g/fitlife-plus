@@ -110,87 +110,70 @@ mongoose.connection.on('disconnected', () => {
   console.warn('MongoDB disconnected');
 });
 
-// REAL MONGODB CONNECTION - No Mock Data
+// PRODUCTION MONGODB CONNECTION - Railway uses NON-SRV MongoDB connection
 const connectMongoDB = async () => {
+  // Validate environment variable
+  if (!process.env.MONGODB_URI) {
+    console.error('❌ MONGODB_URI environment variable is required');
+    process.exit(1);
+  }
+
   try {
-    console.log('🔄 Connecting to MongoDB Atlas...');
+    console.log('🔄 Connecting to MongoDB Atlas (Railway Production)...');
     
     const mongoOptions = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 15000, // Reduced timeout
+      serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
-      connectTimeoutMS: 15000,
+      connectTimeoutMS: 10000,
       maxPoolSize: 10,
       retryWrites: true,
-      w: 'majority',
-      family: 4 // Force IPv4 to avoid IPv6 DNS issues
+      w: 'majority'
     };
 
-    // Primary SRV connection string - ensure database name is included
-    let srvConnectionString = process.env.MONGODB_URI || 'mongodb+srv://fitlife_user:mFzSW2IMFvBdI7Hi@fitlifecluster.yoznqn9.mongodb.net/?retryWrites=true&w=majority';
+    // Use STANDARD MongoDB URI from environment (NO SRV for Railway)
+    // Railway production uses explicit host:port format to avoid DNS issues
+    const mongoUri = process.env.MONGODB_URI;
     
-    // Ensure database name is specified
-    if (!srvConnectionString.includes('/fitlife') && !srvConnectionString.includes('/test')) {
-      srvConnectionString = srvConnectionString.replace('mongodb.net/', 'mongodb.net/fitlife');
-    }
+    console.log('📡 Connecting with standard MongoDB URI...');
+    console.log('🎯 Using explicit hosts (no SRV DNS lookup)');
     
-    // Fallback direct connection strings (bypasses SRV DNS lookup)
-    const directConnectionStrings = [
-      'mongodb://fitlife_user:mFzSW2IMFvBdI7Hi@ac-ixqvhqj-shard-00-00.yoznqn9.mongodb.net:27017,ac-ixqvhqj-shard-00-01.yoznqn9.mongodb.net:27017,ac-ixqvhqj-shard-00-02.yoznqn9.mongodb.net:27017/fitlife?ssl=true&replicaSet=atlas-14ab3h-shard-0&authSource=admin&retryWrites=true&w=majority',
-      'mongodb://fitlife_user:mFzSW2IMFvBdI7Hi@cluster0-shard-00-00.yoznqn9.mongodb.net:27017,cluster0-shard-00-01.yoznqn9.mongodb.net:27017,cluster0-shard-00-02.yoznqn9.mongodb.net:27017/fitlife?ssl=true&replicaSet=atlas-14ab3h-shard-0&authSource=admin&retryWrites=true&w=majority'
-    ];
+    // Single connection attempt - fail fast in production
+    await mongoose.connect(mongoUri, mongoOptions);
     
-    // Try SRV connection first
-    console.log('📡 Attempting MongoDB Atlas SRV connection...');
-    try {
-      await mongoose.connect(srvConnectionString, mongoOptions);
-      console.log('✅ MongoDB Atlas SRV connection successful!');
-      global.isMongoConnected = true;
-      return;
-    } catch (srvError) {
-      console.warn('⚠️ SRV connection failed:', srvError.message);
-      console.log('🔄 Trying direct connection fallbacks...');
-    }
-    
-    // Try direct connections as fallback
-    for (let i = 0; i < directConnectionStrings.length; i++) {
-      try {
-        console.log(`📡 Attempting direct connection ${i + 1}/${directConnectionStrings.length}...`);
-        await mongoose.connect(directConnectionStrings[i], mongoOptions);
-        console.log('✅ MongoDB Atlas direct connection successful!');
-        global.isMongoConnected = true;
-        return;
-      } catch (directError) {
-        console.warn(`❌ Direct connection ${i + 1} failed:`, directError.message);
-      }
-    }
-    
-    // All connections failed
-    throw new Error('All MongoDB connection attempts failed');
+    console.log('✅ MongoDB Atlas connected successfully!');
+    console.log('🎯 Real database connection established');
+    global.isMongoConnected = true;
     
   } catch (error) {
-    console.error('❌ MongoDB Atlas connection completely failed:', error.message);
-    console.error('🚨 CRITICAL: Database unavailable - server cannot function');
+    console.error('❌ MongoDB connection failed:', error.message);
+    console.error('🚨 CRITICAL: Database connection required for production');
     
-    // In production, exit immediately if MongoDB fails
-    if (process.env.NODE_ENV === 'production') {
-      console.log('🔄 Production mode: Exiting for Railway restart...');
-      process.exit(1);
-    } else {
-      console.log('⚠️ Development mode: Server continuing without database');
-    }
+    // FAIL FAST - Exit immediately if database connection fails
+    console.log('💥 Exiting process - Railway will restart with fresh network');
+    process.exit(1);
   }
 };
 
-// Start server regardless of MongoDB connection status
-const startServer = () => {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
-  });
+// Start server ONLY after successful database connection
+const startServer = async () => {
+  try {
+    // Connect to MongoDB first - REQUIRED for production
+    await connectMongoDB();
+    
+    // Start server only after successful DB connection
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
+      console.log('✅ Production backend ready with MongoDB Atlas');
+    });
+    
+  } catch (error) {
+    console.error('❌ Failed to start server:', error.message);
+    process.exit(1);
+  }
 };
 
-// Initialize connections
-connectMongoDB();
+// Initialize server with database-first approach
 startServer();
