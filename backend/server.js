@@ -3,12 +3,10 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const mockDB = require('./mockDatabase');
 dotenv.config();
 
 // Global flag to track database status
 global.isMongoConnected = false;
-global.mockDatabase = mockDB;
 
 const app = express();
 // Allow all origins for development/testing
@@ -58,8 +56,8 @@ app.get('/', (req, res) => {
     status: 'ok', 
     message: 'FitLife+ backend running', 
     env: process.env.NODE_ENV || 'development',
-    database: global.isMongoConnected ? 'MongoDB Atlas' : 'Mock Database',
-    functionality: 'Full API available'
+    database: global.isMongoConnected ? 'MongoDB Atlas Connected' : 'MongoDB Connecting...',
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -67,29 +65,9 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
     time: new Date().toISOString(),
-    database: global.isMongoConnected ? 'connected' : 'mock',
-    features: 'All endpoints working'
+    database: global.isMongoConnected ? 'connected' : 'connecting',
+    mongodb: global.isMongoConnected ? 'Atlas' : 'Attempting connection'
   });
-});
-
-// Test endpoint for immediate functionality
-app.get('/api/test-products', (req, res) => {
-  try {
-    if (global.isMongoConnected) {
-      // Use real MongoDB data when available
-      res.json({ message: 'MongoDB connected - use /api/products for real data' });
-    } else {
-      // Use mock data
-      const products = global.mockDatabase.getAllProducts();
-      res.json({ 
-        message: 'Using mock database', 
-        products: products,
-        note: 'Data will not persist - for testing only'
-      });
-    }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 });
 
 // Error handler
@@ -129,61 +107,44 @@ mongoose.connection.on('disconnected', () => {
   console.warn('MongoDB disconnected');
 });
 
-// PERMANENT SOLUTION: Railway-compatible MongoDB connection
+// REAL MONGODB CONNECTION - No Mock Data
 const connectMongoDB = async () => {
   try {
-    // Check if Railway MongoDB is available first
-    if (process.env.RAILWAY_MONGODB_URL) {
-      console.log('🚂 Using Railway MongoDB...');
-      await mongoose.connect(process.env.RAILWAY_MONGODB_URL);
-      console.log('✅ Connected to Railway MongoDB successfully!');
-      return;
-    }
-
-    // Fallback to Atlas with direct IP connection (no DNS)
+    console.log('🔄 Connecting to MongoDB Atlas...');
+    
     const mongoOptions = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 30000,
-      connectTimeoutMS: 10000,
-      maxPoolSize: 5,
-      bufferCommands: false
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 75000,
+      connectTimeoutMS: 30000,
+      maxPoolSize: 10,
+      retryWrites: true,
+      w: 'majority'
     };
 
-    // Use direct IP addresses instead of DNS (Railway-compatible)
-    const directConnectionURIs = [
-      // Direct connection to MongoDB Atlas servers (bypasses DNS)
-      'mongodb://fitlife_user:mFzSW2IMFvBdI7Hi@cluster0-shard-00-00.yoznqn9.mongodb.net:27017,cluster0-shard-00-01.yoznqn9.mongodb.net:27017,cluster0-shard-00-02.yoznqn9.mongodb.net:27017/fitlife?ssl=true&replicaSet=atlas-cluster0-shard-0&authSource=admin',
-      // Alternative direct connection
-      'mongodb://fitlife_user:mFzSW2IMFvBdI7Hi@ac-nkxaaaa-shard-00-00.yoznqn9.mongodb.net:27017/fitlife?ssl=true&authSource=admin',
-      // Simplified connection
-      process.env.MONGODB_URI
-    ].filter(Boolean);
-
-    console.log('🔄 Attempting direct MongoDB connection (bypassing DNS)...');
+    // Real MongoDB Atlas connection - get actual server IPs
+    const atlasConnectionString = process.env.MONGODB_URI || 'mongodb+srv://fitlife_user:mFzSW2IMFvBdI7Hi@fitlifecluster.yoznqn9.mongodb.net/fitlife?retryWrites=true&w=majority';
     
-    for (let i = 0; i < directConnectionURIs.length; i++) {
-      try {
-        console.log(`📡 Trying direct connection method ${i + 1}...`);
-        await mongoose.connect(directConnectionURIs[i], mongoOptions);
-        console.log('✅ MongoDB connected successfully via direct connection!');
-        console.log(`🎯 Connected using direct method ${i + 1}`);
-        global.isMongoConnected = true;
-        return;
-      } catch (error) {
-        console.log(`❌ Direct method ${i + 1} failed:`, error.message);
-      }
-    }
+    console.log('📡 Attempting MongoDB Atlas connection...');
+    await mongoose.connect(atlasConnectionString, mongoOptions);
     
-    // Final fallback: Create in-memory database for development
-    console.log('🔄 All external connections failed, using in-memory fallback...');
-    console.log('⚠️  Using mock database - data will not persist');
-    console.log('✅ Server ready with mock database functionality');
+    console.log('✅ MongoDB Atlas connected successfully!');
+    console.log('🎯 Real database connection established');
+    global.isMongoConnected = true;
     
   } catch (error) {
-    console.error('❌ All MongoDB connection attempts failed');
-    console.log('✅ Server running with mock data (no persistence)');
+    console.error('❌ MongoDB Atlas connection failed:', error.message);
+    
+    // If Atlas fails, the server should still start but without database
+    console.log('⚠️  Server starting without database connection');
+    console.log('🚨 Database features will not work until MongoDB is connected');
+    
+    // Exit the process so Railway restarts with fresh network
+    console.log('🔄 Restarting to retry MongoDB connection...');
+    setTimeout(() => {
+      process.exit(1);
+    }, 5000);
   }
 };
 
