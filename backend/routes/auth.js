@@ -4,6 +4,17 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+// Test endpoint for deployment verification
+router.get('/test', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Auth API is working',
+    timestamp: new Date().toISOString(),
+    database: global.isMongoConnected ? 'connected' : 'disconnected',
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Signup
 router.post('/signup', async (req, res) => {
   const { name, email, password, age, gender, dietPreference } = req.body;
