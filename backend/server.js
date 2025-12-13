@@ -110,7 +110,7 @@ mongoose.connection.on('disconnected', () => {
   console.warn('MongoDB disconnected');
 });
 
-// PRODUCTION MONGODB CONNECTION - Railway-optimized with multiple connection strategies
+// PRODUCTION MONGODB CONNECTION - Railway-compatible with proper options
 const connectMongoDB = async () => {
   // Validate environment variable
   if (!process.env.MONGODB_URI) {
@@ -119,55 +119,34 @@ const connectMongoDB = async () => {
   }
 
   const connectionStrategies = [
-    // Strategy 1: Environment variable (user-provided)
+    // Strategy 1: SRV connection (works best with Railway)
+    {
+      name: 'SRV Connection',
+      uri: 'mongodb+srv://fitlife_user:mFzSW2IMFvBdI7Hi@fitlifecluster.yoznqn9.mongodb.net/fitlife?retryWrites=true&w=majority',
+      options: {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 30000,
+        socketTimeoutMS: 75000,
+        connectTimeoutMS: 30000,
+        maxPoolSize: 10,
+        retryWrites: true,
+        w: 'majority'
+      }
+    },
+    // Strategy 2: Environment variable (if user provided different format)
     {
       name: 'Environment URI',
       uri: process.env.MONGODB_URI,
       options: {
         useNewUrlParser: true,
         useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 15000,
-        socketTimeoutMS: 45000,
-        connectTimeoutMS: 15000,
-        maxPoolSize: 10,
-        retryWrites: true,
-        w: 'majority',
-        family: 4 // Force IPv4
-      }
-    },
-    // Strategy 2: Direct connection with explicit hosts (Railway-optimized)
-    {
-      name: 'Direct Railway Connection',
-      uri: 'mongodb://fitlife_user:mFzSW2IMFvBdI7Hi@ac-ixqvhqj-shard-00-00.yoznqn9.mongodb.net:27017,ac-ixqvhqj-shard-00-01.yoznqn9.mongodb.net:27017,ac-ixqvhqj-shard-00-02.yoznqn9.mongodb.net:27017/fitlife?ssl=true&replicaSet=atlas-14ab3h-shard-0&authSource=admin&retryWrites=true&w=majority',
-      options: {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 20000,
-        socketTimeoutMS: 60000,
-        connectTimeoutMS: 20000,
-        maxPoolSize: 5,
-        retryWrites: true,
-        w: 'majority',
-        family: 4,
-        bufferCommands: false,
-        bufferMaxEntries: 0
-      }
-    },
-    // Strategy 3: Alternative direct connection
-    {
-      name: 'Alternative Direct Connection',
-      uri: 'mongodb://fitlife_user:mFzSW2IMFvBdI7Hi@cluster0-shard-00-00.yoznqn9.mongodb.net:27017,cluster0-shard-00-01.yoznqn9.mongodb.net:27017,cluster0-shard-00-02.yoznqn9.mongodb.net:27017/fitlife?ssl=true&replicaSet=atlas-14ab3h-shard-0&authSource=admin&retryWrites=true&w=majority',
-      options: {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
         serverSelectionTimeoutMS: 25000,
         socketTimeoutMS: 60000,
         connectTimeoutMS: 25000,
-        maxPoolSize: 5,
+        maxPoolSize: 10,
         retryWrites: true,
-        w: 'majority',
-        family: 4,
-        bufferCommands: false
+        w: 'majority'
       }
     }
   ];
@@ -179,7 +158,6 @@ const connectMongoDB = async () => {
     
     try {
       console.log(`📡 Attempting ${strategy.name} (${i + 1}/${connectionStrategies.length})...`);
-      console.log('🎯 Using explicit hosts (no SRV DNS lookup)');
       
       await mongoose.connect(strategy.uri, strategy.options);
       
@@ -201,9 +179,9 @@ const connectMongoDB = async () => {
   }
 };
 
-// Wrapper with retry logic for Railway network issues
+// Wrapper with simplified retry logic for Railway
 const connectWithRetry = async () => {
-  const maxRetries = 3;
+  const maxRetries = 2;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -216,15 +194,15 @@ const connectWithRetry = async () => {
       
       if (attempt === maxRetries) {
         console.error('🚨 CRITICAL: All MongoDB connection attempts failed');
+        console.error('🚨 Ensure MongoDB Atlas IP whitelist includes 0.0.0.0/0');
         console.error('🚨 Database connection required for production');
-        console.log('💥 Exiting process - Railway will restart with fresh network');
+        console.log('💥 Exiting process - Railway will restart');
         process.exit(1);
       }
       
       // Wait before retry
-      const waitTime = attempt * 2000; // 2s, 4s, 6s
-      console.log(`⏳ Waiting ${waitTime}ms before retry...`);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      console.log(`⏳ Waiting 3 seconds before retry...`);
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
   }
 };
